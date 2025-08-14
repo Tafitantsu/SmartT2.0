@@ -77,15 +77,27 @@
 .light-ew-left { top: 110px; left: 70px; transform: rotate(90deg); }
 .light-ew-right { top: 170px; right: 70px; transform: rotate(-90deg); }
 
-.queue {
+.car-queue {
   position: absolute;
-  color: white;
-  font-size: 1.2em;
-  font-weight: bold;
+  display: flex;
+  gap: 4px;
 }
-
-.queue-ns-top { top: 10px; left: 135px; }
-.queue-ew-right { top: 135px; right: 10px; }
+.car-queue.ns-top {
+  flex-direction: column;
+  top: 10px;
+  left: 130px;
+}
+.car-queue.ew-right {
+  flex-direction: row;
+  top: 170px;
+  right: 10px;
+}
+.car {
+  width: 15px;
+  height: 10px;
+  background-color: #a0a0ff;
+  border-radius: 2px;
+}
 
 .controls-container {
   display: flex;
@@ -119,6 +131,17 @@ button {
 }
 button:hover {
   border-color: #646cff;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.demand-active {
+  background-color: #3f51b5;
+  border-color: #8187ff;
+  box-shadow: 0 0 8px #8187ff;
 }
 
 .pedestrian-light {

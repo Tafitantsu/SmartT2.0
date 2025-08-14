@@ -18,6 +18,16 @@ const PedestrianLight = ({ color }) => (
 );
 
 
+const Car = () => <div className="car"></div>;
+
+const CarQueue = ({ count, direction }) => (
+  <div className={`car-queue ${direction}`}>
+    {/* Limit rendering to a max number of cars to prevent clutter */}
+    {Array.from({ length: Math.min(count, 20) }, (_, i) => <Car key={i} />)}
+  </div>
+);
+
+
 const Intersection = ({ state }) => {
   if (!state.lights) {
     return <div className="intersection-container">Loading...</div>;
@@ -44,18 +54,21 @@ const Intersection = ({ state }) => {
 
 
       {/* Vehicle Queues */}
-      <div className="queue queue-ns-top">NS: {state.queues.ns}</div>
-      <div className="queue queue-ew-right">EW: {state.queues.ew}</div>
+      <CarQueue count={state.queues.ns} direction="ns-top" />
+      <CarQueue count={state.queues.ew} direction="ew-right" />
     </div>
   );
 };
 
-const Controls = ({ ws }) => {
+const Controls = ({ ws, demands }) => {
   const sendMessage = (message) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(message));
     }
   };
+
+  const nsDemand = demands?.ns === 1;
+  const ewDemand = demands?.ew === 1;
 
   return (
     <div className="controls-container">
@@ -66,8 +79,20 @@ const Controls = ({ ws }) => {
       </div>
       <div className="control-group">
         <h3>Piétons</h3>
-        <button onClick={() => sendMessage({ action: 'pedestrian_request', direction: 'NS' })}>Demande piéton NS</button>
-        <button onClick={() => sendMessage({ action: 'pedestrian_request', direction: 'EW' })}>Demande piéton EW</button>
+        <button
+          onClick={() => sendMessage({ action: 'pedestrian_request', direction: 'NS' })}
+          className={nsDemand ? 'demand-active' : ''}
+          disabled={nsDemand}
+        >
+          Demande piéton NS {nsDemand && '...'}
+        </button>
+        <button
+          onClick={() => sendMessage({ action: 'pedestrian_request', direction: 'EW' })}
+          className={ewDemand ? 'demand-active' : ''}
+          disabled={ewDemand}
+        >
+          Demande piéton EW {ewDemand && '...'}
+        </button>
       </div>
     </div>
   );
@@ -114,7 +139,7 @@ function App() {
       <h1>Simulation d'Intersection</h1>
       <div className="simulation-container">
         <Intersection state={simulationState} />
-        <Controls ws={ws} />
+        <Controls ws={ws} demands={simulationState.demands} />
       </div>
     </>
   );

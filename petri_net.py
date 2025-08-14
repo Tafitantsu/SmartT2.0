@@ -102,7 +102,26 @@ class PetriNet:
         self.last_state_change_time = time.time()
         self.current_timer_duration = self._get_new_timer_duration()
 
+    def _generate_random_events(self):
+        """Randomly adds new cars and pedestrian requests."""
+        # Chance to add a car to NS
+        if random.random() < 0.02: # 2% chance per tick
+            self.add_car("NS")
+        # Chance to add a car to EW
+        if random.random() < 0.015: # 1.5% chance per tick
+            self.add_car("EW")
+
+        # Chance for a pedestrian request in NS
+        if self.places["D_P_NS"] == 0 and random.random() < 0.005: # 0.5% chance
+            self.pedestrian_request("NS")
+        # Chance for a pedestrian request in EW
+        if self.places["D_P_EW"] == 0 and random.random() < 0.005: # 0.5% chance
+            self.pedestrian_request("EW")
+
+
     def run_step(self):
+        self._generate_random_events()
+
         # Let cars pass if their light is green (fractional for smooth simulation)
         if self.places["NS_V"] == 1 and self.places["Q_NS"] > 0:
             self.places["Q_NS"] = max(0, self.places["Q_NS"] - 0.2)
