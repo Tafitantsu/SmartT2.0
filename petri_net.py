@@ -3,33 +3,47 @@ import random
 
 class PetriNet:
     def __init__(self):
-        # Simplified place names for clarity
         # V=Green, J=Yellow, R=Red
         self.places = {
             "NS_V": 1, "NS_J": 0, "NS_R": 0,
             "EW_V": 0, "EW_J": 0, "EW_R": 1,
-            "P_NS_V": 0, "P_NS_R": 1, # Pedestrian NS
-            "P_EW_V": 0, "P_EW_R": 1, # Pedestrian EW
-            "D_P_NS": 0, "D_P_EW": 0, # Pedestrian Demand
-            "Q_NS": 3, "Q_EW": 2,     # Vehicle Queues
-            "ALL_R": 0,              # All-Red phase flag
+            "P_NS_V": 0, "P_NS_R": 1,
+            "P_EW_V": 0, "P_EW_R": 1,
+            "D_P_NS": 0, "D_P_EW": 0,
+            "Q_NS": 0, "Q_EW": 0, # Queues start at 0
+            "ALL_R": 0,
         }
 
-        self.state = "NS_V"  # The current state of the main traffic light cycle
+        self.state = "NS_V"
+        # Fixed timers as per requirements
         self.state_timers = {
-            "NS_V": [5, 10], # Green light duration
-            "NS_J": [2, 2],  # Yellow light duration
-            "EW_V": [5, 10],
-            "EW_J": [2, 2],
-            "ALL_R": [1, 1]  # All-Red duration
+            "NS_V": 10, # Priority road green
+            "NS_J": 2,  # Yellow
+            "EW_V": 5,  # Non-priority road green
+            "EW_J": 2,  # Yellow
+            "ALL_R": 2, # All-red transition (used for night mode off-phase)
+            "FLASH_J": 2 # Flashing yellow for night mode
         }
 
+        self.night_mode = False
+        self.last_main_state = "EW" # Start assuming we just finished an EW cycle to go to NS_V first
         self.last_state_change_time = time.time()
         self.current_timer_duration = self._get_new_timer_duration()
 
+    def toggle_night_mode(self):
+        """Toggles the night mode on and off."""
+        self.night_mode = not self.night_mode
+        print(f"Night mode toggled to: {self.night_mode}")
+        if self.night_mode:
+            # When entering night mode, go to a safe state first
+            self._transition_to("ALL_R")
+        else:
+            # When exiting night mode, go to a safe state before starting day cycle
+            self._transition_to("ALL_R")
+
     def _get_new_timer_duration(self):
-        t_min, t_max = self.state_timers.get(self.state, [1, 1])
-        return random.uniform(t_min, t_max)
+        """Returns the fixed duration for the current state."""
+        return self.state_timers.get(self.state, 1)
 
     def get_state(self):
         """Returns a JSON-friendly representation of the current state."""
@@ -65,93 +79,107 @@ class PetriNet:
             self.places["D_P_EW"] = 1
 
     def _transition_to(self, new_state):
+        """Handles the logic for transitioning to a new state."""
         self.state = new_state
 
-        # Reset all light places
-        for k in ["NS_V", "NS_J", "NS_R", "EW_V", "EW_J", "EW_R", "ALL_R", "P_NS_V", "P_EW_V"]:
+        # Reset all light places to a known-safe state (all red)
+        for k in ["NS_V", "NS_J", "EW_V", "EW_J", "ALL_R", "P_NS_V", "P_EW_V"]:
             self.places[k] = 0
+        self.places["NS_R"] = 1
+        self.places["EW_R"] = 1
         self.places["P_NS_R"] = 1
         self.places["P_EW_R"] = 1
 
-        # Set new light places based on state
+        # Set new light places based on the new state
         if new_state == "NS_V":
             self.places["NS_V"] = 1
-            self.places["EW_R"] = 1
-            if self.places["D_P_EW"] == 1: # If there was a demand for EW pedestrians
-                self.places["P_EW_V"] = 1
-                self.places["P_EW_R"] = 0
-                self.places["D_P_EW"] = 0 # Consume demand
+            self.places["NS_R"] = 0
+            # Pedestrians on EW can cross, consuming the demand
+            self.places["P_EW_V"] = 1
+            self.places["P_EW_R"] = 0
+            self.places["D_P_EW"] = 0
         elif new_state == "NS_J":
             self.places["NS_J"] = 1
-            self.places["EW_R"] = 1
+            self.places["NS_R"] = 0
+            self.last_main_state = "NS" # Record that we came from the NS cycle
+            # If the change was triggered by a pedestrian, consume the demand now
+            if self.places["D_P_NS"] == 1:
+                self.places["D_P_NS"] = 0
         elif new_state == "EW_V":
             self.places["EW_V"] = 1
-            self.places["NS_R"] = 1
-            if self.places["D_P_NS"] == 1: # If there was a demand for NS pedestrians
-                self.places["P_NS_V"] = 1
-                self.places["P_NS_R"] = 0
-                self.places["D_P_NS"] = 0 # Consume demand
+            self.places["EW_R"] = 0
+            # Pedestrians on NS can cross, consuming the demand
+            self.places["P_NS_V"] = 1
+            self.places["P_NS_R"] = 0
+            self.places["D_P_NS"] = 0
         elif new_state == "EW_J":
             self.places["EW_J"] = 1
-            self.places["NS_R"] = 1
+            self.places["EW_R"] = 0
+            self.last_main_state = "EW" # Record that we came from the EW cycle
         elif new_state == "ALL_R":
             self.places["ALL_R"] = 1
-            self.places["NS_R"] = 1
-            self.places["EW_R"] = 1
+        elif new_state == "FLASH_J":
+            # In night mode, both yellow lights will be managed by the run_step
+            self.places["NS_J"] = 1
+            self.places["EW_J"] = 1
+            self.places["NS_R"] = 0 # Yellow flashing is not a red light
+            self.places["EW_R"] = 0
 
         self.last_state_change_time = time.time()
         self.current_timer_duration = self._get_new_timer_duration()
 
-    def _generate_random_events(self):
-        """Randomly adds new cars and pedestrian requests."""
-        # Chance to add a car to NS
-        if random.random() < 0.02: # 2% chance per tick
-            self.add_car("NS")
-        # Chance to add a car to EW
-        if random.random() < 0.015: # 1.5% chance per tick
-            self.add_car("EW")
-
-        # Chance for a pedestrian request in NS
-        if self.places["D_P_NS"] == 0 and random.random() < 0.005: # 0.5% chance
-            self.pedestrian_request("NS")
-        # Chance for a pedestrian request in EW
-        if self.places["D_P_EW"] == 0 and random.random() < 0.005: # 0.5% chance
-            self.pedestrian_request("EW")
-
-
     def run_step(self):
-        self._generate_random_events()
-
-        # Let cars pass if their light is green (fractional for smooth simulation)
+        """The main simulation tick, to be called periodically."""
+        # Car queue simulation
         if self.places["NS_V"] == 1 and self.places["Q_NS"] > 0:
-            self.places["Q_NS"] = max(0, self.places["Q_NS"] - 0.2)
+            self.places["Q_NS"] = max(0, self.places["Q_NS"] - 1) # One car passes
         if self.places["EW_V"] == 1 and self.places["Q_EW"] > 0:
-            self.places["Q_EW"] = max(0, self.places["Q_EW"] - 0.2)
+            self.places["Q_EW"] = max(0, self.places["Q_EW"] - 1)
 
-        # Check timer
+        # Check if it's time to transition
         time_elapsed = time.time() - self.last_state_change_time
         if time_elapsed < self.current_timer_duration:
-            return
+            return # Not time yet
 
-        # Timer expired, transition to the next state
-        if self.state == "NS_V":
-            self._transition_to("NS_J")
-        elif self.state == "NS_J":
-            self._transition_to("ALL_R")
-        elif self.state == "EW_V":
-            self._transition_to("EW_J")
-        elif self.state == "EW_J":
-            self._transition_to("ALL_R")
-        elif self.state == "ALL_R":
-            # Decision logic: prioritize direction with more demand (cars + pedestrians)
-            # Pedestrian demand is weighted more heavily
-            ns_demand = self.places["Q_NS"] + self.places["D_P_NS"] * 5
-            ew_demand = self.places["Q_EW"] + self.places["D_P_EW"] * 5
+        # --- State Transition Logic ---
+        if self.night_mode:
+            if self.state == "ALL_R":
+                self._transition_to("FLASH_J")
+            elif self.state == "FLASH_J":
+                self._transition_to("ALL_R")
+            # If not in a standard night mode state, force it to ALL_R
+            elif self.state not in ["ALL_R", "FLASH_J"]:
+                self._transition_to("ALL_R")
+        else:
+            # --- Day Mode State Logic ---
+            state = self.state
+            time_elapsed = time.time() - self.last_state_change_time
+            timer_expired = time_elapsed >= self.current_timer_duration
 
-            # If no demand, alternate. Start with NS.
-            if ns_demand == 0 and ew_demand == 0:
-                self._transition_to("NS_V")
-            elif ns_demand >= ew_demand:
-                self._transition_to("NS_V")
+            if state == "NS_V":
+                # Priority road stays green by default.
+                # It will only change if a condition is met AND min green time has passed.
+                min_green_time_passed = time_elapsed >= self.current_timer_duration
+                car_waiting_ew = self.places["Q_EW"] > 0
+                pedestrian_request_ns = self.places["D_P_NS"] == 1
+
+                if min_green_time_passed and (car_waiting_ew or pedestrian_request_ns):
+                    self._transition_to("NS_J")
+            elif state == "NS_J":
+                if timer_expired:
+                    self._transition_to("ALL_R")
+            elif state == "EW_V":
+                if timer_expired:
+                    self._transition_to("EW_J")
+            elif state == "EW_J":
+                if timer_expired:
+                    self._transition_to("ALL_R")
+            elif state == "ALL_R":
+                if timer_expired:
+                    if self.last_main_state == "NS":
+                        self._transition_to("EW_V") # Go to non-priority road
+                    else: # last_main_state == "EW"
+                        self._transition_to("NS_V") # Return to priority road
+            # If system is in a weird state during day mode, reset it safely
             else:
-                self._transition_to("EW_V")
+                self._transition_to("ALL_R")
