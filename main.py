@@ -66,6 +66,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 petri_net.add_car(direction)
             elif action == "pedestrian_request" and direction in ["NS", "EW"]:
                 petri_net.pedestrian_request(direction)
+            elif action == "toggle_night_mode":
+                petri_net.toggle_night_mode()
 
             # Immediately broadcast the change after a user action
             state = petri_net.get_state()
