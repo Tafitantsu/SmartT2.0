@@ -1,3 +1,84 @@
+/* --- From template.html --- */
+/* Carrefour */
+.intersection {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    background: #4a4a4a;
+}
+
+/* Routes */
+.road-horizontal {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: #2e2e2e;
+    transform: translateY(-50%);
+    z-index: 0;
+}
+.road-vertical {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 100px;
+    height: 100%;
+    background: #2e2e2e;
+    transform: translateX(-50%);
+    z-index: 0;
+}
+
+/* Coins */
+.corner {
+    position: absolute;
+    width: 145px;
+    height: 145px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.1);
+    z-index: 1;
+}
+.top-left { top: 0; left: 0; }
+.top-right { top: 0; right: 0; }
+.bottom-left { bottom: 0; left: 0; }
+.bottom-right { bottom: 0; right: 0; }
+
+/* Feux */
+.traffic-light {
+    position: absolute;
+    width: 25px;
+    height: 75px;
+    background: black;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    padding: 5px;
+    transform-origin: center;
+}
+.light {
+    width: 18px;
+    height: 18px;
+    background: gray;
+    border-radius: 50%;
+}
+.light.green { background: green; }
+.light.red { background: red; }
+.light.orange { background: orange; }
+.light.yellow { background: orange; } /* Alias for orange */
+
+
+/* Position et rotation réaliste des feux */
+.top-left .traffic-light { bottom: 10px; right: 10px; transform: rotate(180deg); }
+.top-right .traffic-light { bottom: 10px; left: 10px; transform: rotate(270deg); }
+.bottom-left .traffic-light { top: 10px; right: 10px; transform: rotate(90deg); }
+.bottom-right .traffic-light { top: 10px; left: 10px; transform: rotate(0deg); }
+
+
+/* --- Merged from old App.css --- */
 #root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -13,90 +94,14 @@
   text-align: center;
 }
 
+h1 {
+  margin-bottom: 2rem;
+}
+
 .simulation-container {
   display: flex;
   gap: 50px;
-  align-items: center;
-}
-
-.intersection-container {
-  width: 300px;
-  height: 300px;
-  background-color: #444;
-  position: relative;
-  border: 2px solid #555;
-}
-
-.road {
-  position: absolute;
-  background-color: #666;
-}
-
-.road.ns {
-  width: 60px;
-  height: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.road.ew {
-  height: 60px;
-  width: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.traffic-light {
-  width: 20px;
-  height: 60px;
-  background-color: #333;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: center;
-  padding: 5px 0;
-  position: absolute;
-}
-
-.light {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background-color: #555; /* Off state */
-}
-
-.light.red { background-color: #ff0000; }
-.light.yellow { background-color: #ffff00; }
-.light.green { background-color: #00ff00; }
-
-
-/* Positioning lights */
-.light-ns-top { top: 70px; left: 170px; }
-.light-ns-bottom { bottom: 70px; left: 110px; transform: rotate(180deg); }
-.light-ew-left { top: 110px; left: 70px; transform: rotate(90deg); }
-.light-ew-right { top: 170px; right: 70px; transform: rotate(-90deg); }
-
-.car-queue {
-  position: absolute;
-  display: flex;
-  gap: 4px;
-}
-.car-queue.ns-top {
-  flex-direction: column;
-  top: 10px;
-  left: 130px;
-}
-.car-queue.ew-right {
-  flex-direction: row;
-  top: 170px;
-  right: 10px;
-}
-.car {
-  width: 15px;
-  height: 10px;
-  background-color: #a0a0ff;
-  border-radius: 2px;
+  align-items: flex-start; /* Align to top */
 }
 
 .controls-container {
@@ -112,6 +117,7 @@
   padding: 15px;
   background-color: #333;
   border-radius: 8px;
+  text-align: left;
 }
 
 .control-group h3 {
@@ -144,16 +150,57 @@ button.demand-active {
   box-shadow: 0 0 8px #8187ff;
 }
 
+/* --- New/Modified for features --- */
+
+/* Pedestrian Lights */
 .pedestrian-light {
     position: absolute;
-    width: 30px;
-    height: 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 0 0 5px black;
 }
-.ped-light.green { color: #00ff00; }
-.ped-light.red { color: #ff0000; }
+.pedestrian-light.walk { color: #00ff00; }
+.pedestrian-light.dont-walk { color: #ff0000; }
 
-.ped-light-ns { top: 135px; left: 50px; }
-.ped-light-ew { top: 50px; left: 135px; }
+/* Positioning Pedestrian Lights */
+.top-left .pedestrian-light { top: 10px; left: 10px; }
+.top-right .pedestrian-light { top: 10px; right: 10px; }
+.bottom-left .pedestrian-light { bottom: 10px; left: 10px; }
+.bottom-right .pedestrian-light { bottom: 10px; right: 10px; }
+
+
+/* Car Queues */
+.car-queue {
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  z-index: 2; /* Above the road */
+}
+.car {
+  width: 15px;
+  height: 10px;
+  background-color: #a0a0ff;
+  border-radius: 2px;
+}
+
+/* Positioning Car Queues */
+.car-queue.ns-top {
+  flex-direction: column;
+  top: 10px;
+  left: 170px;
+}
+.car-queue.ns-bottom {
+  flex-direction: column-reverse;
+  bottom: 10px;
+  left: 215px;
+}
+.car-queue.ew-left {
+  flex-direction: row;
+  top: 215px;
+  left: 10px;
+}
+.car-queue.ew-right {
+  flex-direction: row-reverse;
+  top: 170px;
+  right: 10px;
+}

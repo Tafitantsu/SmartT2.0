@@ -3,59 +3,91 @@ import './App.css';
 
 // --- Components ---
 
-const TrafficLight = ({ color }) => (
-  <div className="traffic-light">
-    <div className={`light ${color === 'red' ? 'red' : ''}`}></div>
-    <div className={`light ${color === 'yellow' ? 'yellow' : ''}`}></div>
-    <div className={`light ${color === 'green' ? 'green' : ''}`}></div>
-  </div>
-);
-
-const PedestrianLight = ({ color }) => (
-    <div className={`ped-light ${color}`}>
-        {color === 'green' ? 'WALK' : 'DONT WALK'}
-    </div>
-);
-
+const PedestrianLight = ({ color }) => {
+    const isWalk = color === 'green';
+    return (
+        <div className={`pedestrian-light ${isWalk ? 'walk' : 'dont-walk'}`}>
+            {isWalk ? 'WALK' : "DON'T WALK"}
+        </div>
+    );
+};
 
 const Car = () => <div className="car"></div>;
 
 const CarQueue = ({ count, direction }) => (
   <div className={`car-queue ${direction}`}>
-    {/* Limit rendering to a max number of cars to prevent clutter */}
     {Array.from({ length: Math.min(count, 20) }, (_, i) => <Car key={i} />)}
   </div>
 );
 
-
 const Intersection = ({ state }) => {
-  if (!state.lights) {
-    return <div className="intersection-container">Loading...</div>;
+  if (!state.lights || !state.queues || !state.pedestrian_lights) {
+    return <div className="intersection">Loading...</div>;
   }
 
+  const nsLight = state.lights.ns;
+  const ewLight = state.lights.ew;
+  const nsPedLight = state.pedestrian_lights.ns;
+  const ewPedLight = state.pedestrian_lights.ew;
+
+  const nsQueue = state.queues.ns || 0;
+  const ewQueue = state.queues.ew || 0;
+
   return (
-    <div className="intersection-container">
-      <div className="road ns"></div>
-      <div className="road ew"></div>
+    <div className="intersection">
+        <div className="road-horizontal"></div>
+        <div className="road-vertical"></div>
 
-      {/* Traffic Lights */}
-      <div className="light-ns-top"><TrafficLight color={state.lights.ns} /></div>
-      <div className="light-ns-bottom"><TrafficLight color={state.lights.ns} /></div>
-      <div className="light-ew-left"><TrafficLight color={state.lights.ew} /></div>
-      <div className="light-ew-right"><TrafficLight color={state.lights.ew} /></div>
-
-      {/* Pedestrian Lights */}
-      <div className="ped-light-ns">
-          <PedestrianLight color={state.pedestrian_lights.ns} />
-      </div>
-      <div className="ped-light-ew">
-          <PedestrianLight color={state.pedestrian_lights.ew} />
-      </div>
+        {/* Car Queues */}
+        <CarQueue count={Math.floor(nsQueue / 2)} direction="ns-top" />
+        <CarQueue count={Math.ceil(nsQueue / 2)} direction="ns-bottom" />
+        <CarQueue count={Math.floor(ewQueue / 2)} direction="ew-left" />
+        <CarQueue count={Math.ceil(ewQueue / 2)} direction="ew-right" />
 
 
-      {/* Vehicle Queues */}
-      <CarQueue count={state.queues.ns} direction="ns-top" />
-      <CarQueue count={state.queues.ew} direction="ew-right" />
+        <div className="corner top-left">
+            {/* Pedestrians crossing NS road */}
+            <PedestrianLight color={nsPedLight} />
+            <div className="traffic-light">
+                <small>F1</small>
+                <div className={`light ${nsLight === 'red' ? 'red' : ''}`}></div>
+                <div className={`light ${nsLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${nsLight === 'green' ? 'green' : ''}`}></div>
+            </div>
+        </div>
+
+        <div className="corner top-right">
+            {/* Pedestrians crossing EW road */}
+            <PedestrianLight color={ewPedLight} />
+            <div className="traffic-light">
+                <small>F2</small>
+                <div className={`light ${ewLight === 'red' ? 'red' : ''}`}></div>
+                <div className={`light ${ewLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${ewLight === 'green' ? 'green' : ''}`}></div>
+            </div>
+        </div>
+
+        <div className="corner bottom-left">
+            {/* Pedestrians crossing EW road */}
+            <PedestrianLight color={ewPedLight} />
+            <div className="traffic-light">
+                <small>F3</small>
+                <div className={`light ${ewLight === 'red' ? 'red' : ''}`}></div>
+                <div className={`light ${ewLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${ewLight === 'green' ? 'green' : ''}`}></div>
+            </div>
+        </div>
+
+        <div className="corner bottom-right">
+            {/* Pedestrians crossing NS road */}
+            <PedestrianLight color={nsPedLight} />
+            <div className="traffic-light">
+                <small>F4</small>
+                <div className={`light ${nsLight === 'red' ? 'red' : ''}`}></div>
+                <div className={`light ${nsLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${nsLight === 'green' ? 'green' : ''}`}></div>
+            </div>
+        </div>
     </div>
   );
 };
