@@ -26,6 +26,8 @@ class PetriNet:
         }
 
         self.night_mode = False
+        self.semi_automatic_mode = False
+        self.max_vehicles = 5
         self.last_main_state = "EW" # Start assuming we just finished an EW cycle to go to NS_V first
         self.last_state_change_time = time.time()
         self.current_timer_duration = self._get_new_timer_duration()
@@ -40,6 +42,11 @@ class PetriNet:
         else:
             # When exiting night mode, go to a safe state before starting day cycle
             self._transition_to("ALL_R")
+
+    def toggle_semi_automatic_mode(self):
+        """Toggles the semi-automatic car generation mode."""
+        self.semi_automatic_mode = not self.semi_automatic_mode
+        print(f"Semi-automatic mode toggled to: {self.semi_automatic_mode}")
 
     def _get_new_timer_duration(self):
         """Returns the fixed duration for the current state."""
@@ -130,6 +137,17 @@ class PetriNet:
 
     def run_step(self):
         """The main simulation tick, to be called periodically."""
+        # Semi-automatic car generation
+        if self.semi_automatic_mode:
+            total_vehicles = self.places["Q_NS"] + self.places["Q_EW"]
+            if total_vehicles < self.max_vehicles:
+                # Add a car with a certain probability to avoid flooding the system
+                if random.random() < 0.1: # 10% chance per tick
+                    if random.choice(["NS", "EW"]) == "NS":
+                        self.add_car("NS")
+                    else:
+                        self.add_car("EW")
+
         # Car queue simulation
         if self.places["NS_V"] == 1 and self.places["Q_NS"] > 0:
             self.places["Q_NS"] = max(0, self.places["Q_NS"] - 1) # One car passes
