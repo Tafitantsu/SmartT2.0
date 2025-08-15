@@ -60,7 +60,7 @@ const Intersection = ({ state }) => {
   );
 };
 
-const Controls = ({ ws, demands }) => {
+const Controls = ({ ws, demands, semiAutomaticMode }) => {
   const sendMessage = (message) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(message));
@@ -92,6 +92,15 @@ const Controls = ({ ws, demands }) => {
           disabled={ewDemand}
         >
           Demande piéton EW {ewDemand && '...'}
+        </button>
+      </div>
+      <div className="control-group">
+        <h3>Système</h3>
+        <button
+          onClick={() => sendMessage({ action: 'toggle_semi_automatic_mode' })}
+          className={semiAutomaticMode ? 'demand-active' : ''}
+        >
+          Mode semi-auto {semiAutomaticMode ? 'Activé' : 'Désactivé'}
         </button>
       </div>
     </div>
@@ -139,7 +148,7 @@ function App() {
       <h1>Simulation d'Intersection</h1>
       <div className="simulation-container">
         <Intersection state={simulationState} />
-        <Controls ws={ws} demands={simulationState.demands} />
+        <Controls ws={ws} demands={simulationState.demands} semiAutomaticMode={simulationState.semi_automatic_mode} />
       </div>
     </>
   );

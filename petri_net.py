@@ -70,7 +70,8 @@ class PetriNet:
             "demands": {
                 "ns": self.places["D_P_NS"],
                 "ew": self.places["D_P_EW"],
-            }
+            },
+            "semi_automatic_mode": self.semi_automatic_mode
         }
 
     def add_car(self, direction):
