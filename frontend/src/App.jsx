@@ -46,6 +46,7 @@ const Intersection = ({ state }) => {
 
 
         <div className="corner top-left">
+            <header>HD</header>
             {/* Pedestrians crossing NS road */}
             <PedestrianLight color={nsPedLight} />
             <div className="traffic-light">
@@ -57,6 +58,7 @@ const Intersection = ({ state }) => {
         </div>
 
         <div className="corner top-right">
+            <header>HG</header>
             {/* Pedestrians crossing EW road */}
             <PedestrianLight color={ewPedLight} />
             <div className="traffic-light">
@@ -68,6 +70,7 @@ const Intersection = ({ state }) => {
         </div>
 
         <div className="corner bottom-left">
+            <header>BD</header>
             {/* Pedestrians crossing EW road */}
             <PedestrianLight color={ewPedLight} />
             <div className="traffic-light">
@@ -79,6 +82,7 @@ const Intersection = ({ state }) => {
         </div>
 
         <div className="corner bottom-right">
+            <header>BG</header>
             {/* Pedestrians crossing NS road */}
             <PedestrianLight color={nsPedLight} />
             <div className="traffic-light">
