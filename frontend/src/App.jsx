@@ -25,6 +25,7 @@ const Intersection = ({ state }) => {
     return <div className="intersection">Loading...</div>;
   }
 
+  const isNightMode = state.night_mode;
   const nsLight = state.lights.ns;
   const ewLight = state.lights.ew;
   const nsPedLight = state.pedestrian_lights.ns;
@@ -33,8 +34,10 @@ const Intersection = ({ state }) => {
   const nsQueue = state.queues.ns || 0;
   const ewQueue = state.queues.ew || 0;
 
+  const flashingClass = isNightMode ? 'flashing' : '';
+
   return (
-    <div className="intersection">
+    <div className={`intersection ${isNightMode ? 'night-mode' : ''}`}>
         <div className="road-horizontal"></div>
         <div className="road-vertical"></div>
 
@@ -52,7 +55,7 @@ const Intersection = ({ state }) => {
             <div className="traffic-light">
                 <small>F1</small>
                 <div className={`light ${nsLight === 'red' ? 'red' : ''}`}></div>
-                <div className={`light ${nsLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${nsLight === 'yellow' ? `yellow ${flashingClass}` : ''}`}></div>
                 <div className={`light ${nsLight === 'green' ? 'green' : ''}`}></div>
             </div>
         </div>
@@ -64,7 +67,7 @@ const Intersection = ({ state }) => {
             <div className="traffic-light">
                 <small>F2</small>
                 <div className={`light ${ewLight === 'red' ? 'red' : ''}`}></div>
-                <div className={`light ${ewLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${ewLight === 'yellow' ? `yellow ${flashingClass}`: ''}`}></div>
                 <div className={`light ${ewLight === 'green' ? 'green' : ''}`}></div>
             </div>
         </div>
@@ -76,7 +79,7 @@ const Intersection = ({ state }) => {
             <div className="traffic-light">
                 <small>F3</small>
                 <div className={`light ${ewLight === 'red' ? 'red' : ''}`}></div>
-                <div className={`light ${ewLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${ewLight === 'yellow' ? `yellow ${flashingClass}` : ''}`}></div>
                 <div className={`light ${ewLight === 'green' ? 'green' : ''}`}></div>
             </div>
         </div>
@@ -88,7 +91,7 @@ const Intersection = ({ state }) => {
             <div className="traffic-light">
                 <small>F4</small>
                 <div className={`light ${nsLight === 'red' ? 'red' : ''}`}></div>
-                <div className={`light ${nsLight === 'yellow' ? 'yellow' : ''}`}></div>
+                <div className={`light ${nsLight === 'yellow' ? `yellow ${flashingClass}` : ''}`}></div>
                 <div className={`light ${nsLight === 'green' ? 'green' : ''}`}></div>
             </div>
         </div>
@@ -96,7 +99,7 @@ const Intersection = ({ state }) => {
   );
 };
 
-const Controls = ({ ws, demands, semiAutomaticMode }) => {
+const Controls = ({ ws, demands, semiAutomaticMode, nightMode }) => {
   const sendMessage = (message) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(message));
@@ -137,6 +140,12 @@ const Controls = ({ ws, demands, semiAutomaticMode }) => {
           className={semiAutomaticMode ? 'demand-active' : ''}
         >
           Mode semi-auto {semiAutomaticMode ? 'Activé' : 'Désactivé'}
+        </button>
+        <button
+            onClick={() => sendMessage({ action: 'toggle_night_mode' })}
+            className={nightMode ? 'demand-active' : ''}
+        >
+            Mode Nuit {nightMode ? 'Activé' : 'Désactivé'}
         </button>
       </div>
     </div>
@@ -184,7 +193,7 @@ function App() {
       <h1>Simulation d'Intersection</h1>
       <div className="simulation-container">
         <Intersection state={simulationState} />
-        <Controls ws={ws} demands={simulationState.demands} semiAutomaticMode={simulationState.semi_automatic_mode} />
+        <Controls ws={ws} demands={simulationState.demands} semiAutomaticMode={simulationState.semi_automatic_mode} nightMode={simulationState.night_mode} />
       </div>
     </>
   );

@@ -71,6 +71,7 @@ class PetriNet:
                 "ns": self.places["D_P_NS"],
                 "ew": self.places["D_P_EW"],
             },
+            "night_mode": self.night_mode,
             "semi_automatic_mode": self.semi_automatic_mode
         }
 

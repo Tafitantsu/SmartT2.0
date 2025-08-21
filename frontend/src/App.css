@@ -70,6 +70,23 @@
 .light.orange { background: orange; }
 .light.yellow { background: orange; } /* Alias for orange */
 
+.light.flashing {
+  animation: flash 1s infinite;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.intersection.night-mode {
+  background-color: #2a2a2a;
+}
+.intersection.night-mode .road-horizontal,
+.intersection.night-mode .road-vertical {
+  background-color: #1e1e1e;
+}
+
 
 /* Position et rotation réaliste des feux */
 .top-left .traffic-light { bottom: 10px; right: 10px; transform: rotate(180deg); }
